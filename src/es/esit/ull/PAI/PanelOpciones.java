@@ -2,6 +2,8 @@ package es.esit.ull.PAI;
 
 import java.awt.Color;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -14,10 +16,18 @@ public class PanelOpciones extends JPanel {
   private final String VEL = "Mostrar velocidades";
   private final String RASTRO = "Mostrar rastro";
   private final String VECTOR = "Mostrar vector";
+  private TiroParabolicoGrafico tiroParabolicoGrafico;
   
-  public PanelOpciones() {
+  public PanelOpciones(TiroParabolicoGrafico tiroParabolicoGrafico) {
+    this.tiroParabolicoGrafico = tiroParabolicoGrafico;
     iniciarComponentes();
     establecerEstilo();
+    iniciarOyentes();
+  }
+
+  private void iniciarOyentes() {
+    getMostrarRastro().addActionListener(new RastroListener());
+    
   }
 
   private void establecerEstilo() {
@@ -36,12 +46,32 @@ public class PanelOpciones extends JPanel {
     add(getMostrarVector());
   }
   
+  class RastroListener implements ActionListener {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      if (getMostrarRastro().isSelected()) {
+        getTiroParabolicoGrafico().setRastro(true);
+      } else {
+        getTiroParabolicoGrafico().setRastro(false);
+      }
+      
+    } 
+  }
   /**
    * Getter & Setter
    */
   
   public JCheckBox getMostrarVelocidades() {
     return mostrarVelocidades;
+  }
+
+  public TiroParabolicoGrafico getTiroParabolicoGrafico() {
+    return tiroParabolicoGrafico;
+  }
+
+  public void setTiroParabolicoGrafico(TiroParabolicoGrafico tiroParabolicoGrafico) {
+    this.tiroParabolicoGrafico = tiroParabolicoGrafico;
   }
 
   public String getVEL() {

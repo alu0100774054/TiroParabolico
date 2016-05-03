@@ -4,10 +4,13 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 
 public class Interfaz extends JFrame {
@@ -18,11 +21,14 @@ public class Interfaz extends JFrame {
   private JPanel panelControl;
   private JPanel panelBotones;
   private JPanel panelContenedor;                         // Contiene todas las herramientas.
+  private Timer timer;
+  private boolean isPausado = false;
   
   public Interfaz() {
    panelControl = new JPanel();
    panelBotones = new JPanel();
    panelContenedor = new JPanel();
+   timer = new Timer(100, new TimerListener());
    iniciarInterfaz();
    iniciarComponentes();
    establecerEstilo();
@@ -34,10 +40,11 @@ public class Interfaz extends JFrame {
   }
 
   private void iniciarComponentes() {
-    setPanelControles(new PanelControles());
-    setPanelDatosIniciales(new PanelDatosIniciales());
+    
+    setPanelDatosIniciales(new PanelDatosIniciales());    
     setTiroParabolicoGrafico(new TiroParabolicoGrafico());
-    setPanelOpciones(new PanelOpciones());
+    setPanelOpciones(new PanelOpciones(getTiroParabolicoGrafico()));
+    setPanelControles(new PanelControles(getTiroParabolicoGrafico(), getPanelDatosIniciales() , this));
     
     getPanelBotones().setLayout(new GridLayout(1, 1));
     getPanelBotones().add(getPanelControles());
@@ -55,17 +62,41 @@ public class Interfaz extends JFrame {
 
   private void iniciarInterfaz() {
     setLayout(new BorderLayout());
-    setSize(new Dimension(800, 800));
+    setSize(new Dimension(1100, 1300));
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setTitle("Tiro Parabólico");
   }
+  
+  class TimerListener implements ActionListener {
 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      getTiroParabolicoGrafico().repaint();
+    }
+    
+  }
   /**
    * Getter & Setters
    */
   
   public PanelControles getPanelControles() {
     return panelControles;
+  }
+
+  public boolean isPausado() {
+    return isPausado;
+  }
+
+  public void setPausado(boolean isPausado) {
+    this.isPausado = isPausado;
+  }
+
+  public Timer getTimer() {
+    return timer;
+  }
+
+  public void setTimer(Timer timer) {
+    this.timer = timer;
   }
 
   public JPanel getPanelContenedor() {

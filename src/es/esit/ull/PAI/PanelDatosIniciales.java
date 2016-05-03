@@ -33,11 +33,12 @@ public class PanelDatosIniciales extends JPanel {
   
   public PanelDatosIniciales() {
     MINIMO = 1;
-    MAXIMO = 110;
+    MAXIMO = 310;
     velocidad = 0;
     angulo = 0;
     altura = 0;
     iniciarComponentes();
+    repaint();
     establecerEstilo();
     iniciarOyentes();
   }
