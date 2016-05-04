@@ -62,7 +62,7 @@ public class Interfaz extends JFrame {
 
   private void iniciarInterfaz() {
     setLayout(new BorderLayout());
-    setSize(new Dimension(1100, 1300));
+    setSize(new Dimension(800, 800));
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setTitle("Tiro Parabólico");
   }

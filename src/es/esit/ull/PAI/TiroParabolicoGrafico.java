@@ -1,33 +1,32 @@
 package es.esit.ull.PAI;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 
 public class TiroParabolicoGrafico extends JPanel {
   private TiroParabolico tiroParabolico;
   private boolean isIniciado;
   private boolean isRastro;
+  private boolean isVector;
   private int Margen = 50;
   private final int TAM_LIN_EJE = 5;
   private int numLineasDelEje;
   private double tiempo = 0.0;
   private ArrayList<Integer> puntosX;
   private ArrayList<Integer> puntosY;
-  private int posBolaX;
-  private int posBolaY;
   
   public TiroParabolicoGrafico() {
     puntosX = new ArrayList<Integer>();
     puntosY = new ArrayList<Integer>();
-    posBolaX = 0;
-    posBolaY = 0;
     setNumLineasDelEje(10);
     isIniciado = false;
+    isVector = false;
     isRastro = false;
     establecerEstilo();
 
@@ -40,10 +39,11 @@ public class TiroParabolicoGrafico extends JPanel {
 
   }
   public void tiroNuevo(int velocidadInicial, double grados, int alturaInicial) {
-    tiroParabolico = new TiroParabolico(velocidadInicial, grados, alturaInicial);
-    isIniciado = true;
-    puntosX = new ArrayList<Integer>();
-    puntosY = new ArrayList<Integer>();
+    setTiroParabolico(new TiroParabolico(velocidadInicial, grados, alturaInicial));
+    setIniciado(true);
+    setTiempo(0.0);
+    setPuntosX(new ArrayList<Integer>());
+    setPuntosY(new ArrayList<Integer>());
     repaint();
   }
   private void establecerEstilo() {
@@ -53,20 +53,41 @@ public class TiroParabolicoGrafico extends JPanel {
   @Override
   protected void paintComponent(Graphics g) {
     super.paintComponent(g);
+    
     if (!isIniciado) {
+      dibujarFondo(g);
       dibujarCoordenadas(g);
+      dibujarCanion(g);
     } else {
-      if (isRastro()) {
+      if (!isRastro()) {
+        dibujarFondo(g);
+        dibujarCanion(g);
         dibujarRastro(g);
         dibujarCoordenadas(g); 
-        dibujarTiro(g);
+        //dibujarTiro(g);
+        dibujarValores(g);
       } else {
+        dibujarFondo(g);
         dibujarCoordenadas(g); 
         dibujarTiro(g);
+        dibujarCanion(g);
+        dibujarValores(g);
       }
     }
   }
-  private void dibujarRastro(Graphics g) {
+  private void dibujarFondo(Graphics g) {
+    
+    ImageIcon cielo = new ImageIcon("cielo.png");
+    g.drawImage(cielo.getImage(), 0, 0, this);
+    ImageIcon suelo = new ImageIcon("suelo.png");
+    g.drawImage(suelo.getImage(), 0, this.getHeight() - 185 , this);
+    ImageIcon nube = new ImageIcon("nube.png");
+    g.drawImage(nube.getImage(), this.getWidth() / 4, 0, this);
+    ImageIcon sol = new ImageIcon("sol.png");
+    g.drawImage(sol.getImage(), 0, 0, this); 
+  }
+
+  private void dibujarValores(Graphics g) {
     int siguiente = this.getHeight() / 4;
     // Alcance
     g.drawString(String.valueOf("Xmáx = " + getTiroParabolico().getAlcanceMaximo()) + " mts.", this.getWidth() / 2, siguiente);
@@ -79,14 +100,47 @@ public class TiroParabolicoGrafico extends JPanel {
     siguiente += getMargen();
   }
 
-  private void dibujarTiro(Graphics g) {
+  private void dibujarCanion(Graphics g) {
+    ImageIcon img = new ImageIcon("canion.png");
+    g.drawImage(img.getImage(), getMargen() / 2 + getMargen() / 8, this.getHeight() - getMargen() - getMargen() / 2, this);
+  }
+
+  private void dibujarRastro(Graphics g) {
+    ImageIcon bala = new ImageIcon("bala.png");
     dibujarCoordenadasDeTiro(g);
     int origenX = getMargen();
     int origenY = this.getHeight() - getMargen();
     int incrementoAlcance = ((int) getTiroParabolico().getAlcanceMaximo()) / getNumLineasDelEje();
     int incrementoAltura = ((int) getTiroParabolico().getAlturaMaxima()) / getNumLineasDelEje();
-    float pX = (float) incrementoAlcance / 100;
-    float pY = (float) incrementoAltura / 100;
+    float pX = (float) incrementoAlcance / ((this.getWidth() - getMargen() - getMargen()) / getNumLineasDelEje());
+    float pY = (float) incrementoAltura / ((this.getHeight() - getMargen() - getMargen()) / getNumLineasDelEje());
+    if (getTiempo() < getTiroParabolico().getTiempoEnCaer()) {
+      int x = getTiroParabolico().calcularTrayectoriaX(getTiempo());
+      int y = getTiroParabolico().calcularTrayectoriaY(getTiempo());
+      float punX = (float) x / pX;
+      float punY = (float) y / pY;
+      int puntoX = (int) punX;
+      int puntoY = (int) punY;
+      getPuntosX().add(puntoX);
+      getPuntosY().add(puntoY);
+      g.drawImage(bala.getImage(), origenX + getPuntosX().get(getPuntosX().size() - 1), origenY - getPuntosY().get(getPuntosY().size() - 1), this);
+      //g.fillOval(origenX + getPuntosX().get(getPuntosX().size() - 1), origenY - getPuntosY().get(getPuntosY().size() - 1), 5, 5);
+      setTiempo(getTiempo() + 0.1);
+    } else {
+      g.drawImage(bala.getImage(), origenX + getPuntosX().get(getPuntosX().size() - 1), origenY - getPuntosY().get(getPuntosY().size() - 1), this);
+      //g.fillOval(origenX + getPuntosX().get(getPuntosX().size() - 1), origenY - getPuntosY().get(getPuntosY().size() - 1), 5, 5);
+    }
+  }
+
+  private void dibujarTiro(Graphics g) {
+    ImageIcon bala = new ImageIcon("bala.png");
+    dibujarCoordenadasDeTiro(g);
+    int origenX = getMargen();
+    int origenY = this.getHeight() - getMargen();
+    int incrementoAlcance = ((int) getTiroParabolico().getAlcanceMaximo()) / getNumLineasDelEje();
+    int incrementoAltura = ((int) getTiroParabolico().getAlturaMaxima()) / getNumLineasDelEje();
+    float pX = (float) incrementoAlcance / ((this.getWidth() - getMargen() - getMargen()) / getNumLineasDelEje());
+    float pY = (float) incrementoAltura / ((this.getHeight() - getMargen() - getMargen()) / getNumLineasDelEje());
     if (getTiempo() < getTiroParabolico().getTiempoEnCaer()) {
       int x = getTiroParabolico().calcularTrayectoriaX(getTiempo());
       int y = getTiroParabolico().calcularTrayectoriaY(getTiempo());
@@ -100,42 +154,33 @@ public class TiroParabolicoGrafico extends JPanel {
         if (getPuntosY().size() > 1) {
           if (i > 0) {
             if (getPuntosY().get(i) < getPuntosY().get(i - 1)) {
-              g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
+              g.drawImage(bala.getImage(), origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), this);
+              //g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
             }
           }
         }
-        g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
+        g.drawImage(bala.getImage(), origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), this);
+        //g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
       }
-//      for (int i = 0; i < getPuntosY().size(); i++) {
-//        if (getPuntosY().size() > 1 && i > 1) {
-//          if (getPuntosY().get(i) < getPuntosY().get(i - 1)) {
-//            System.out.println("baja " + getPuntosX().get(i) + ", " + getPuntosY().get(i));
-//            g.fillOval(origenX + getPuntosX().get(i), origenY + getPuntosY().get(i), 5, 5);
-//          } else if (getPuntosY().get(i) >= getPuntosY().get(i - 1)) {
-//            System.out.println("sube " + getPuntosX().get(i) + ", " + getPuntosY().get(i));
-//            g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
-//          }
-//        } else if (getPuntosY().size() <= 1 || i == 0) {
-//          System.out.println("nuevo "  + getPuntosX().get(i) + ", " + getPuntosY().get(i));
-//          g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
-//        }
-//      }
       setTiempo(getTiempo() + 0.1);
     } else {
       for (int i = 0; i < getPuntosX().size(); i++) {
         if (getPuntosY().size() > 1) {
           if (i > 0) {
             if (getPuntosY().get(i) < getPuntosY().get(i - 1)) {
-              g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
+              g.drawImage(bala.getImage(), origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), this);
+              //g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
             }
           }
         }
-        g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
+        g.drawImage(bala.getImage(), origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), this);
+        //g.fillOval(origenX + getPuntosX().get(i), origenY - getPuntosY().get(i), 5, 5);
       }
     }
   }
 
   private void dibujarCoordenadasDeTiro(Graphics g) {
+    g.setColor(Color.WHITE);
     int incrementoX = ((this.getWidth() - getMargen()) - getMargen()) / getNumLineasDelEje();
     int incrementoY = ((this.getHeight() - getMargen()) - getMargen()) / getNumLineasDelEje();
     int incrementoAlcance = ((int) getTiroParabolico().getAlcanceMaximo()) / getNumLineasDelEje();
@@ -167,9 +212,11 @@ public class TiroParabolicoGrafico extends JPanel {
       lineaX += incrementoX;
       valorX += incrementoAlcance; 
     }   
+    g.setColor(Color.BLACK);
   }
 
   private void dibujarCoordenadas(Graphics g) {
+    g.setColor(Color.WHITE);
     int incrementoX = ((this.getWidth() - getMargen()) - getMargen()) / getNumLineasDelEje();
     int incrementoY = ((this.getHeight() - getMargen()) - getMargen()) / getNumLineasDelEje();
 
@@ -189,6 +236,7 @@ public class TiroParabolicoGrafico extends JPanel {
       g.drawLine(lineaX, this.getHeight() - getMargen(), lineaX, this.getHeight() - getMargen() - getTAM_LIN_EJE());
       lineaX += incrementoX;
     }
+    g.setColor(Color.BLACK);
   }
 
   /**
@@ -197,22 +245,6 @@ public class TiroParabolicoGrafico extends JPanel {
 
   public boolean isIniciado() {
     return isIniciado;
-  }
-
-  public int getPosBolaX() {
-    return posBolaX;
-  }
-
-  public void setPosBolaX(int posBolaX) {
-    this.posBolaX = posBolaX;
-  }
-
-  public int getPosBolaY() {
-    return posBolaY;
-  }
-
-  public void setPosBolaY(int posBolaY) {
-    this.posBolaY = posBolaY;
   }
 
   public boolean isRastro() {
